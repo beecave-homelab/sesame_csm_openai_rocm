@@ -16,10 +16,17 @@ services:
     environment:
       - HF_TOKEN=${HF_TOKEN}  
       - TTS_ENGINE=${TTS_ENGINE:-csm}  # Default to CSM if not specified
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    # ROCm/AMD GPU access and runtime options
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+    stdin_open: true
+    tty: true
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    group_add:
+      - video
+    ipc: host
+    shm_size: 8G

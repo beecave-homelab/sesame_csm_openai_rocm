@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 # Multi-stage build for authenticated model downloads
 FROM python:3.10-slim AS model-downloader
 # Install huggingface-cli
@@ -19,38 +21,33 @@ RUN if [ -n "$HF_TOKEN" ]; then \
     huggingface-cli login --token ${HF_TOKEN}; \
     fi
 
-# Download CSM-1B model
-RUN if [ -n "$HF_TOKEN" ] || [ "$TTS_ENGINE" = "csm" ]; then \
+# Download CSM-1B model (only if token provided)
+RUN if [ -n "$HF_TOKEN" ]; then \
     echo "Downloading CSM-1B model..."; \
     huggingface-cli download sesame/csm-1b ckpt.pt --local-dir /model-downloader/models/csm-1b; \
-    else echo "Skipping CSM-1B model download"; fi
+    else echo "Skipping CSM-1B model download (no HF_TOKEN)"; fi
 
-# Download Dia-1.6B model
-RUN if [ -n "$HF_TOKEN" ] || [ "$TTS_ENGINE" = "dia" ]; then \
+# Download Dia-1.6B model (only if token provided)
+RUN if [ -n "$HF_TOKEN" ]; then \
     echo "Downloading Dia-1.6B model..."; \
     huggingface-cli download nari-labs/Dia-1.6B config.json --local-dir /model-downloader/models/dia-1.6b; \
     huggingface-cli download nari-labs/Dia-1.6B dia-v0_1.pth --local-dir /model-downloader/models/dia-1.6b; \
-    else echo "Skipping Dia-1.6B model download"; fi
+    else echo "Skipping Dia-1.6B model download (no HF_TOKEN)"; fi
 
-# Now for the main application stage
-FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
-# Set environment variables
+# Now for the main application stage (ROCm)
+FROM python:3.10-slim
+# Set environment variables (ROCm-friendly)
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_DEFAULT_TIMEOUT=100 \
-    NVIDIA_VISIBLE_DEVICES=all \
-    NVIDIA_DRIVER_CAPABILITIES=compute,utility \
-    TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6" \
-    TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
+    ROCM_PATH=/opt/rocm \
+    HSA_OVERRIDE_GFX_VERSION=10.3.0
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-dev \
     ffmpeg \
     git \
     build-essential \
@@ -74,23 +71,12 @@ RUN mkdir -p /app/static /app/models /app/models/csm-1b /app/models/dia-1.6b \
 # Copy static files
 COPY ./static /app/static
 
-# Install Python dependencies
-RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install torch torchaudio numpy
-
-# Install torchao from source
-ENV CUDA_HOME=/usr/local/cuda
-RUN pip3 install git+https://github.com/pytorch/ao.git
-
-# Install torchtune from source with specific branch for latest features
-RUN git clone https://github.com/pytorch/torchtune.git /tmp/torchtune && \
-    cd /tmp/torchtune && \
-    # Try to use the main branch, which should have llama3_2
-    git checkout main && \
-    pip install -e .
+# Upgrade pip (dependencies installed later from requirements.txt)
+RUN pip3 install --no-cache-dir --upgrade pip
 
 # Install base requirements
 RUN pip3 install -r requirements.txt
+
 
 # Install Dia model dependencies if TTS_ENGINE is set to dia
 ARG TTS_ENGINE=csm
@@ -100,8 +86,6 @@ RUN if [ "$TTS_ENGINE" = "dia" ]; then \
     echo "Dia model dependencies installed"; \
 fi
 
-# Install additional dependencies for streaming and voice cloning
-RUN pip3 install yt-dlp openai-whisper
 
 # Copy application code
 COPY ./app /app/app
