@@ -25,20 +25,23 @@ An OpenAI-compatible Text-to-Speech API that harnesses the power of Sesame's Con
 ### Installation
 
 1. Clone this repository:
-```bash
-git clone https://github.com/phildougherty/sesame_csm_openai
-cd sesame_csm_openai
-```
+
+    ```bash
+    git clone https://github.com/phildougherty/sesame_csm_openai
+    cd sesame_csm_openai
+    ```
 
 2. Create a `.env` file in the /app folder with your Hugging Face token:
-```
-HF_TOKEN=your_hugging_face_token_here
-```
+
+    ```bash
+    HF_TOKEN=your_hugging_face_token_here
+    ```
 
 3. Build and start the container:
-```bash
-docker compose up -d --build
-```
+
+    ```bash
+    docker compose up -d --build
+    ```
 
 The server will start on port 8000. First startup may take some time as it downloads the model files.
 
@@ -51,9 +54,9 @@ This API requires access to the `sesame/csm-1b` model on Hugging Face:
 3. Generate an access token at [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 4. Use this token in your `.env` file or pass it directly when building the container:
 
-```bash
-HF_TOKEN=your_token docker compose up -d --build
-```
+    ```bash
+    HF_TOKEN=your_token docker compose up -d --build
+    ```
 
 ### Required Models
 
@@ -106,38 +109,43 @@ The CSM-1B TTS API comes with powerful voice cloning capabilities that allow you
 ### Method 2: Using the API
 
 1. **Clone a Voice**:
-```bash
-curl -X POST http://localhost:8000/v1/voice-cloning/clone \
-  -F "name=My Voice" \
-  -F "audio_file=@path/to/your/voice_sample.mp3" \
-  -F "transcript=Optional transcript of the audio sample" \
-  -F "description=A description of this voice"
-```
+
+    ```bash
+    curl -X POST http://localhost:8000/v1/voice-cloning/clone \
+      -F "name=My Voice" \
+      -F "audio_file=@path/to/your/voice_sample.mp3" \
+      -F "transcript=Optional transcript of the audio sample" \
+      -F "description=A description of this voice"
+    ```
 
 2. **List Available Cloned Voices**:
-```bash
-curl -X GET http://localhost:8000/v1/voice-cloning/voices
-```
+
+    ```bash
+    curl -X GET http://localhost:8000/v1/voice-cloning/voices
+    ```
 
 3. **Generate Speech with a Cloned Voice**:
-```bash
-curl -X POST http://localhost:8000/v1/voice-cloning/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "voice_id": "1234567890_my_voice",
-    "text": "This is my cloned voice speaking.",
-    "temperature": 0.7
-  }' \
-  --output cloned_speech.mp3
-```
+
+    ```bash
+    curl -X POST http://localhost:8000/v1/voice-cloning/generate \
+      -H "Content-Type: application/json" \
+      -d '{
+        "voice_id": "1234567890_my_voice",
+        "text": "This is my cloned voice speaking.",
+        "temperature": 0.7
+      }' \
+    --output cloned_speech.mp3
+    ```
 
 4. **Generate a Voice Preview**:
-```bash
-curl -X POST http://localhost:8000/v1/voice-cloning/voices/1234567890_my_voice/preview \
-  --output voice_preview.mp3
-```
+
+    ```bash
+    curl -X POST http://localhost:8000/v1/voice-cloning/voices/1234567890_my_voice/preview \
+      --output voice_preview.mp3
+    ```
 
 5. **Delete a Cloned Voice**:
+
 ```bash
 curl -X DELETE http://localhost:8000/v1/voice-cloning/voices/1234567890_my_voice
 ```
@@ -176,7 +184,7 @@ curl -X POST http://localhost:8000/v1/audio/speech \
   --output cloned_speech.mp3
 ```
 
-## YouTube Voice Cloning 
+## YouTube Voice Cloning
 
 The CSM-1B TTS API now includes the ability to clone voices directly from YouTube videos. This feature allows you to extract voice characteristics from any YouTube content and create custom TTS voices without needing to download or prepare audio samples yourself.
 
@@ -184,11 +192,12 @@ The CSM-1B TTS API now includes the ability to clone voices directly from YouTub
 
 ### API Endpoint
 
-```
+```http
 POST /v1/audio/speech/voice-cloning/youtube
 ```
 
 Parameters:
+
 - `youtube_url`: URL of the YouTube video
 - `voice_name`: Name for the cloned voice
 - `start_time` (optional): Start time in seconds (default: 0)
@@ -196,6 +205,7 @@ Parameters:
 - `description` (optional): Description of the voice
 
 Example request:
+
 ```json
 {
   "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -207,6 +217,7 @@ Example request:
 ```
 
 Response:
+
 ```json
 {
   "voice_id": "1710805983_rick_astley",
@@ -263,6 +274,7 @@ For optimal results:
 ## Ethical Considerations
 
 Please use YouTube voice cloning responsibly:
+
 - Only clone voices from content you have permission to use
 - Respect copyright and intellectual property rights
 - Clearly disclose when using AI-generated or cloned voices
@@ -307,6 +319,7 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 ### Available Endpoints
 
 #### Standard TTS Endpoints
+
 - `GET /v1/audio/models` - List available models
 - `GET /v1/audio/voices` - List available voices (including cloned voices)
 - `GET /v1/audio/speech/response-formats` - List available response formats
@@ -314,6 +327,7 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 - `POST /api/v1/audio/conversation` - Advanced endpoint for conversational speech
 
 #### Voice Cloning Endpoints
+
 - `POST /v1/voice-cloning/clone` - Clone a new voice from an audio sample
 - `GET /v1/voice-cloning/voices` - List all cloned voices
 - `POST /v1/voice-cloning/generate` - Generate speech with a cloned voice
@@ -323,6 +337,7 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 ### Request Parameters
 
 #### Standard TTS
+
 | Parameter | Description | Type | Default |
 |-----------|-------------|------|---------|
 | `model` | Model ID to use | string | "csm-1b" |
@@ -334,6 +349,7 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 | `max_audio_length_ms` | Maximum audio length in ms | integer | 90000 |
 
 #### Voice Cloning
+
 | Parameter | Description | Type | Default |
 |-----------|-------------|------|---------|
 | `name` | Name for the cloned voice | string | Required |
