@@ -1,10 +1,11 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to agents when working with code in this repository.
 
 ## Project Overview
 
 This is a Python FastAPI application that provides an OpenAI-compatible Text-to-Speech (TTS) API using two different models:
+
 - **CSM-1B**: Sesame's Conversational Speech Model (default)
 - **Dia-1.6B**: Nari Labs' Dialogue Speech Model
 
@@ -13,6 +14,7 @@ The application runs in Docker containers with CUDA support for GPU acceleration
 ## Development Commands
 
 ### Building and Running
+
 ```bash
 # Build and start with Docker Compose
 docker compose up -d --build
@@ -29,7 +31,9 @@ DEV_MODE=true python -m app.main
 ```
 
 ### Environment Variables
+
 Key environment variables for configuration:
+
 - `TTS_ENGINE`: Choose between "csm" (default) or "dia"
 - `HF_TOKEN`: Hugging Face token for model access
 - `CSM_DEVICE_MAP`: Multi-GPU mapping ("auto", "balanced", "sequential")
@@ -68,6 +72,7 @@ pytest -m "not slow"  # Skip slow tests
 ```
 
 #### Test Structure
+
 - **Unit Tests** (`tests/unit/`): Test individual components in isolation
   - `test_schemas.py`: API request/response validation
   - `test_text_normalizer.py`: Text processing and normalization
@@ -84,7 +89,9 @@ pytest -m "not slow"  # Skip slow tests
   - `conftest.py`: Shared fixtures and test setup
 
 #### Manual Testing
+
 For manual testing of the live API:
+
 ```bash
 # Health check
 curl http://localhost:8000/health
@@ -101,26 +108,31 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 ### Core Components
 
 **FastAPI Application** (`app/main.py`):
+
 - Main application entry point with lifespan management
 - Handles model loading, voice systems initialization
 - Configures CORS, static files, and routing
 
 **TTS Generator** (`app/generator.py`):
+
 - Core speech generation logic for CSM-1B model
 - Handles text tokenization, audio generation, and watermarking
 - Supports multi-GPU distribution and optimization
 
 **API Routes** (`app/api/routes.py`):
+
 - OpenAI-compatible speech generation endpoints
 - Handles voice mapping, format conversion, and streaming
 - Supports both standard and cloned voices
 
 **Voice Systems**:
+
 - **Voice Cloning** (`app/voice_cloning.py`): Clone voices from audio samples
 - **Voice Enhancement** (`app/voice_enhancement.py`): Improve voice consistency
 - **Voice Memory** (`app/voice_memory.py`): Maintain voice context across requests
 
 **Model Adapters**:
+
 - **CSM-1B**: Native support via torchtune models
 - **Dia-1.6B**: Adapter pattern in `app/dia_adapter.py`
 
@@ -138,7 +150,7 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 1. **Request Processing**: FastAPI receives TTS request with text and voice
 2. **Voice Resolution**: Maps voice name/ID to speaker ID or cloned voice
 3. **Text Processing**: Normalizes text and applies prompt engineering
-4. **Audio Generation**: 
+4. **Audio Generation**:
    - CSM-1B: Uses transformer-based generation with audio tokenization
    - Dia-1.6B: Uses adapted interface with S1/S2 speaker tags
 5. **Post-Processing**: Applies voice enhancement, speed adjustment, format conversion
@@ -150,12 +162,13 @@ curl -X POST http://localhost:8000/v1/audio/speech \
 - **Cloned Voices**: `/app/cloned_voices/` (persistent volume)
 - **Voice References**: `/app/voice_references/` (persistent volume)
 - **Audio Cache**: `/app/audio_cache/` (persistent volume)
-- **Logs**: `/app/logs/` 
+- **Logs**: `/app/logs/`
 - **Static Files**: `/app/static/` (web UI)
 
 ## Performance Optimizations
 
 The application includes several performance optimizations:
+
 - **Mixed Precision**: Uses bfloat16/float16 when available
 - **Torch Compile**: JIT compilation for faster inference
 - **CUDA Optimizations**: TF32, Flash Attention, CUDNN benchmark
@@ -165,18 +178,21 @@ The application includes several performance optimizations:
 ## API Endpoints
 
 ### Core TTS Endpoints
+
 - `POST /v1/audio/speech` - Generate speech (OpenAI compatible)
 - `POST /v1/audio/speech/streaming` - Stream audio generation
 - `GET /v1/audio/voices` - List available voices
 - `GET /v1/audio/models` - List available models
 
 ### Voice Cloning Endpoints
+
 - `POST /v1/voice-cloning/clone` - Clone voice from audio
 - `GET /v1/voice-cloning/voices` - List cloned voices
 - `POST /v1/voice-cloning/generate` - Generate with cloned voice
 - `DELETE /v1/voice-cloning/voices/{voice_id}` - Delete cloned voice
 
 ### Utility Endpoints
+
 - `GET /health` - Health check with system status
 - `GET /voice-cloning` - Voice cloning web UI
 - `GET /debug` - Debug information
