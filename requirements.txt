@@ -1,15 +1,19 @@
+--index-url https://download.pytorch.org/whl/rocm6.4
+--extra-index-url https://pypi.org/simple
+--find-links https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4.1/
+
 fastapi>=0.100.0
 uvicorn>=0.24.0
 pydantic>=2.4.0
 python-multipart>=0.0.6
 huggingface_hub>=0.20.0
-torch>=2.0.0
-torchaudio>=2.0.0
+torch==2.7.1+rocm6.4.1.git2a215e4a
+torchaudio==2.7.1+rocm6.4.1.git95c61b41
 transformers>=4.35.0
 tokenizers>=0.14.0
 sentencepiece>=0.1.99
-triton>=2.1.0; platform_system != "Windows"
-triton-windows>=2.1.0; platform_system == "Windows"
+pytorch-triton-rocm==3.3.1+rocm6.4.1.git40e90a0a
+onnxruntime-rocm==1.21.0
 torchao>=0.1.0
 torchtune>=0.5.0
 numpy>=1.25.0
